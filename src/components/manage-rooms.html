@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Rooms</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Manage Rooms</h1>
+        <form id="manage-rooms-form">
+            <label for="room-number">Room Number:</label>
+            <input type="text" id="room-number" required>
+
+            <label for="room-type">Room Type:</label>
+            <select id="room-type" required>
+                <option value="single">Single</option>
+                <option value="double">Double</option>
+                <option value="suite">Suite</option>
+            </select>
+
+            <label for="price">Price:</label>
+            <input type="number" id="price" required>
+
+            <label for="availability">Availability:</label>
+            <select id="availability" required>
+                <option value="available">Available</option>
+                <option value="unavailable">Unavailable</option>
+            </select>
+
+            <button type="submit">Add/Update Room</button>
+        </form>
+
+        <h2>Room List</h2>
+        <table id="room-list">
+            <thead>
+                <tr>
+                    <th>Room Number</th>
+                    <th>Room Type</th>
+                    <th>Price</th>
+                    <th>Availability</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Room entries will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="../js/manage-rooms.js"></script>
+</body>
+</html>

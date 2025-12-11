@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Out</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Check Out</h1>
+        <form id="checkout-form">
+            <label for="booking-id">Booking ID:</label>
+            <input type="text" id="booking-id" required>
+
+            <label for="guest-name">Guest Name:</label>
+            <input type="text" id="guest-name" required>
+
+            <label for="room-number">Room Number:</label>
+            <input type="text" id="room-number" required>
+
+            <button type="submit">Finalize Check Out</button>
+        </form>
+        <div id="checkout-message"></div>
+    </div>
+    <script src="../js/checkout.js"></script>
+</body>
+</html>
