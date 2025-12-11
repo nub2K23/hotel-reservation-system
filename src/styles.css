@@ -58,3 +58,9 @@ body{margin:0;background:var(--bg);color:#0f172a}
 .conflict-tooltip{grid-column:1/-1;background:#fff6f6;border:1px solid #f8d7da;color:#7f1d1d;padding:8px;border-radius:8px;margin-top:6px;font-size:13px}
 .conflict-tooltip ul{margin:0;padding-left:18px}
 .conflict-tooltip.hidden{display:none}
+
+/* autosave prompt banner */
+.autosave-prompt{background:linear-gradient(90deg,#fff8e1,#fff);border-top:1px solid #f0e6c8;border-bottom:1px solid #f0e6c8;padding:10px 0}
+.autosave-prompt .prompt-actions{display:inline-flex;gap:10px;float:right}
+.autosave-prompt .container{display:flex;align-items:center;gap:12px}
+.autosave-prompt.hidden{display:none}

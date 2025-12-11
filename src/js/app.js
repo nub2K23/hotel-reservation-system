@@ -8,8 +8,6 @@
     rooms: [],
     reservations: []
   };
-  // billing records
-  state.billings = [];
 
   // initial demo rooms
   function seed() {
@@ -35,6 +33,179 @@
   function save() {
     localStorage.setItem('hrs_rooms', JSON.stringify(state.rooms));
     localStorage.setItem('hrs_res', JSON.stringify(state.reservations));
+    // update stored revenue summary
+    const revenue = state.reservations.reduce((s,r) => s + (r.payment ? Number(r.payment.amount||0) : 0), 0);
+    localStorage.setItem('hrs_revenue', JSON.stringify(revenue));
+    // attempt auto-save to default disk file if enabled
+    try { attemptAutoSave(); } catch (e) { /* ignore */ }
+  }
+
+  // Export / Import handlers for persistence backup
+  function exportData() {
+    const data = {
+      rooms: state.rooms,
+      reservations: state.reservations,
+      revenue: Number(localStorage.getItem('hrs_revenue') || 0)
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'hrs-data.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function importDataFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (data.rooms && Array.isArray(data.rooms)) state.rooms = data.rooms;
+        if (data.reservations && Array.isArray(data.reservations)) state.reservations = data.reservations;
+        if (typeof data.revenue !== 'undefined') localStorage.setItem('hrs_revenue', JSON.stringify(Number(data.revenue) || 0));
+        save(); load(); renderAll();
+        alert('Import successful');
+      } catch (err) {
+        alert('Failed to import: invalid file');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // IndexedDB helpers to store persistent file handle (Chromium browsers)
+  function openHandlesDB() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) return reject(new Error('IndexedDB not available'));
+      const req = indexedDB.open('hrs_handles', 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('handles')) db.createObjectStore('handles');
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function storeHandle(handle) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const db = await openHandlesDB();
+        const tx = db.transaction('handles', 'readwrite');
+        tx.objectStore('handles').put(handle, 'dataFile');
+        tx.oncomplete = () => { db.close(); resolve(true); };
+        tx.onerror = () => { db.close(); reject(tx.error); };
+      } catch (err) { reject(err); }
+    });
+  }
+
+  function getStoredHandle() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const db = await openHandlesDB();
+        const tx = db.transaction('handles', 'readonly');
+        const req = tx.objectStore('handles').get('dataFile');
+        req.onsuccess = () => { db.close(); resolve(req.result); };
+        req.onerror = () => { db.close(); resolve(null); };
+      } catch (err) { resolve(null); }
+    });
+  }
+
+  async function attemptAutoSave() {
+    // write current data to stored handle if present
+    try {
+      const handle = await getStoredHandle();
+      if (!handle) return; // not configured
+      const data = { rooms: state.rooms, reservations: state.reservations, revenue: Number(localStorage.getItem('hrs_revenue') || 0) };
+      const text = JSON.stringify(data, null, 2);
+      const writable = await handle.createWritable();
+      await writable.write(text);
+      await writable.close();
+    } catch (err) {
+      console.warn('Auto-save failed', err);
+    }
+  }
+
+  // Allow user to select and store a default file for auto-save
+  async function enableAutoSave() {
+    if (!window.showSaveFilePicker) {
+      alert('Auto-save requires a Chromium-based browser supporting the File System Access API. Falling back to manual export.');
+      return;
+    }
+    try {
+      const handle = await window.showSaveFilePicker({ suggestedName: 'hrs-data.json', types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+      await storeHandle(handle);
+      // do an immediate write
+      await attemptAutoSave();
+      alert('Auto-save enabled (file handle stored). Future saves will write automatically to this file.');
+      return true;
+    } catch (err) {
+      console.warn('enableAutoSave cancelled', err);
+      return false;
+    }
+  }
+
+  async function disableAutoSave() {
+    try {
+      const db = await openHandlesDB();
+      const tx = db.transaction('handles', 'readwrite');
+      tx.objectStore('handles').delete('dataFile');
+      tx.oncomplete = () => db.close();
+    } catch (err) {
+      console.warn('disableAutoSave', err);
+    }
+  }
+
+  // File System Access API: Save/load directly to disk (Chromium browsers)
+  async function saveToDisk() {
+    const data = {
+      rooms: state.rooms,
+      reservations: state.reservations,
+      revenue: Number(localStorage.getItem('hrs_revenue') || 0)
+    };
+    const text = JSON.stringify(data, null, 2);
+    // feature detect
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: 'hrs-data.json',
+          types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(text);
+        await writable.close();
+        alert('Data saved to disk');
+        return;
+      } catch (err) {
+        console.warn('Save to disk cancelled or failed', err);
+      }
+    }
+    // fallback to export download
+    exportData();
+  }
+
+  async function loadFromDisk() {
+    if (window.showOpenFilePicker) {
+      try {
+        const [handle] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }], multiple: false });
+        const file = await handle.getFile();
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (data.rooms && Array.isArray(data.rooms)) state.rooms = data.rooms;
+        if (data.reservations && Array.isArray(data.reservations)) state.reservations = data.reservations;
+        if (typeof data.revenue !== 'undefined') localStorage.setItem('hrs_revenue', JSON.stringify(Number(data.revenue) || 0));
+        save(); load(); renderAll();
+        alert('Loaded data from disk');
+        return;
+      } catch (err) {
+        console.warn('Load from disk cancelled or failed', err);
+      }
+    }
+    // fallback: trigger import file input
+    const input = qs('#importFile');
+    if (input) input.click();
   }
 
   // UI helpers
@@ -66,27 +237,23 @@
     if (!sel) return;
     const cur = sel.value;
     sel.innerHTML = '<option value="">-- select room --</option>';
-      state.billings = JSON.parse(localStorage.getItem('hrs_billings') || '[]');
 
     // helper to check date overlap (inclusive start, exclusive end)
     function overlaps(aStart, aEnd, bStart, bEnd) {
       if (!aStart || !aEnd || !bStart || !bEnd) return false;
       return (aStart < bEnd) && (bStart < aEnd);
-      localStorage.setItem('hrs_billings', JSON.stringify(state.billings));
     }
 
     const conflicts = [];
     state.rooms.forEach(r => {
       const opt = document.createElement('option');
-      // show only upcoming (Booked) reservations — checked-in guests removed
       opt.value = r.number;
-        if (res.status !== 'Booked') return;
-        const li = document.createElement('li');
-        const payInfo = res.payment ? `${res.payment.method} $${Number(res.payment.amount||0).toFixed(2)}` : '';
-        const cardInfo = res.payment && res.payment.cardMasked ? ` — ${res.payment.cardMasked}` : '';
-        li.innerHTML = `<div><strong>${res.guest}</strong> — Room ${res.room} (${res.dIn} → ${res.dOut})</div>
-          <div>${res.status || 'Booked'} <span class="muted">${payInfo}${cardInfo}</span> <button class="btn link" data-act="cancel" data-i="${i}">Cancel</button></div>`;
-        ul.appendChild(li);
+      opt.textContent = `${r.number} — ${r.type}`;
+
+      // determine if room should be disabled
+      let disable = false;
+      let note = '';
+      let conflictInfo = '';
 
       // if user provided dates, check for overlaps with existing reservations
       if (dIn && dOut) {
@@ -130,7 +297,9 @@
   function renderReservations() {
     const ul = qs('#resList');
     ul.innerHTML = '';
+    // show only upcoming (Booked) reservations in the upcoming list
     state.reservations.forEach((res, i) => {
+      if (res.status !== 'Booked') return;
       const li = document.createElement('li');
       const payInfo = res.payment ? `${res.payment.method} $${Number(res.payment.amount||0).toFixed(2)}` : '';
       const cardInfo = res.payment && res.payment.cardMasked ? ` — ${res.payment.cardMasked}` : '';
@@ -168,8 +337,7 @@
     const rc = qs('#reportContent'); rc.innerHTML = '';
     const totalRooms = state.rooms.length;
     const occupied = state.reservations.filter(r => r.status === 'Checked-in').length;
-    // revenue based on billing records
-    const revenue = state.billings.reduce((s,b) => s + (Number(b.payment && b.payment.amount ? b.payment.amount : b.rate || 0)), 0);
+    const revenue = state.reservations.reduce((s,r)=> s + (r.payment ? Number(r.payment.amount||0) : Number(r.rate||0)), 0);
     rc.innerHTML = `<p>Total rooms: <strong>${totalRooms}</strong></p>
       <p>Occupied now: <strong>${occupied}</strong></p>
       <p>Total revenue (payments): <strong>$${revenue.toFixed(2)}</strong></p>`;
@@ -344,31 +512,60 @@
       updateCardVisibility();
     }
 
-    // Export billing CSV
-    const exportBtn = qs('#exportCsv');
-    if (exportBtn) {
-      exportBtn.addEventListener('click', () => {
-        const rows = [];
-        rows.push(['guest','room','rate','payment_method','payment_amount','checkin','createdAt']);
-        state.billings.forEach(b => {
-          rows.push([
-            b.guest,
-            b.room,
-            b.rate,
-            b.payment && b.payment.method ? b.payment.method : '',
-            b.payment && b.payment.amount ? Number(b.payment.amount).toFixed(2) : (b.rate?Number(b.rate).toFixed(2):'0.00'),
-            b.checkin || '',
-            b.createdAt || ''
-          ]);
-        });
-        const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'billing_export.csv';
-        a.click();
-        URL.revokeObjectURL(url);
+    // wire export/import UI
+    const btnExport = qs('#btnExport');
+    const btnImport = qs('#btnImport');
+    const importFile = qs('#importFile');
+    if (btnExport) btnExport.addEventListener('click', exportData);
+    const btnSaveDisk = qs('#btnSaveDisk');
+    const btnLoadDisk = qs('#btnLoadDisk');
+    const btnAutoSave = qs('#btnAutoSave');
+    if (btnSaveDisk) btnSaveDisk.addEventListener('click', saveToDisk);
+    if (btnLoadDisk) btnLoadDisk.addEventListener('click', loadFromDisk);
+    if (btnAutoSave) {
+      // toggle auto-save
+      btnAutoSave.addEventListener('click', async () => {
+        const enabled = btnAutoSave.dataset.enabled === '1';
+        if (!enabled) {
+          const ok = await enableAutoSave();
+          if (ok) { btnAutoSave.textContent = 'Disable Auto-Save'; btnAutoSave.dataset.enabled = '1'; }
+        } else {
+          await disableAutoSave();
+          btnAutoSave.textContent = 'Enable Auto-Save'; btnAutoSave.dataset.enabled = '0';
+          alert('Auto-save disabled');
+        }
+      });
+      // read current state of stored handle
+      getStoredHandle().then(h => { if (h) { btnAutoSave.textContent = 'Disable Auto-Save'; btnAutoSave.dataset.enabled = '1'; } else { btnAutoSave.dataset.enabled = '0'; } });
+    }
+    // one-time autosave prompt (show when no stored handle and not dismissed)
+    const prompt = qs('#autosavePrompt');
+    const promptEnable = qs('#promptEnable');
+    const promptDismiss = qs('#promptDismiss');
+    try {
+      const dismissed = localStorage.getItem('hrs_autoprompt_dismissed') === '1';
+      if (prompt && !dismissed && window.showSaveFilePicker) {
+        // show prompt
+        prompt.classList.remove('hidden');
+      }
+      if (promptEnable) promptEnable.addEventListener('click', async () => {
+        const ok = await enableAutoSave();
+        if (ok) {
+          if (prompt) prompt.classList.add('hidden');
+          if (btnAutoSave) { btnAutoSave.textContent = 'Disable Auto-Save'; btnAutoSave.dataset.enabled = '1'; }
+        }
+      });
+      if (promptDismiss) promptDismiss.addEventListener('click', () => {
+        localStorage.setItem('hrs_autoprompt_dismissed','1');
+        if (prompt) prompt.classList.add('hidden');
+      });
+    } catch (e) { /* ignore */ }
+    if (btnImport && importFile) {
+      btnImport.addEventListener('click', () => importFile.click());
+      importFile.addEventListener('change', e => {
+        const f = e.target.files && e.target.files[0];
+        if (f) importDataFile(f);
+        e.target.value = '';
       });
     }
 
@@ -384,11 +581,21 @@
         state.reservations.splice(idx,1); save(); renderAll();
       } else if (act === 'checkin') {
         const r = state.reservations[idx];
-        if (r) r.status = 'Checked-in';
+        if (r) {
+          r.status = 'Checked-in';
+          // mark room occupied
+          const room = state.rooms.find(rr => String(rr.number) === String(r.room));
+          if (room) room.status = 'Occupied';
+        }
         save(); renderAll();
       } else if (act === 'checkout') {
         const r = state.reservations[idx];
-        if (r) r.status = 'Checked-out';
+        if (r) {
+          r.status = 'Checked-out';
+          // mark room available
+          const room = state.rooms.find(rr => String(rr.number) === String(r.room));
+          if (room) room.status = 'Available';
+        }
         save(); renderAll();
       }
     });

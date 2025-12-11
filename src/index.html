@@ -31,6 +31,8 @@
     </div>
   </header>
 
+  <!-- autosave prompt moved into Reports section -->
+
   <main class="container main">
     <!-- LOGIN PANEL -->
     <section id="loginScreen" class="card center-screen">
@@ -175,8 +177,26 @@
         <div class="card">
           <h3>Occupancy & Revenue</h3>
           <div id="reportContent"></div>
-          <div style="margin-top:12px">
-            <button id="exportCsv" class="btn">Export Billing CSV</button>
+        </div>
+        <div class="card">
+          <h3>Data Management</h3>
+          <p>Export, import and persist application data.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button id="btnExport" class="btn link">Export Data</button>
+            <button id="btnSaveDisk" class="btn link">Save to Disk</button>
+            <button id="btnAutoSave" class="btn link">Enable Auto-Save</button>
+            <button id="btnLoadDisk" class="btn link">Load from Disk</button>
+            <button id="btnImport" class="btn link">Import Data</button>
+            <input id="importFile" type="file" accept="application/json" style="display:none" />
+          </div>
+        </div>
+        <div id="autosavePrompt" class="autosave-prompt hidden">
+          <div class="container">
+            <span><strong>Enable Auto-Save:</strong> Choose a default file to automatically persist data to disk (recommended).</span>
+            <div class="prompt-actions">
+              <button id="promptEnable" class="btn primary">Enable Auto-Save</button>
+              <button id="promptDismiss" class="btn link">Don't show again</button>
+            </div>
           </div>
         </div>
       </div>
