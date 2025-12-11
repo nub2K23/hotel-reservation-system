@@ -1,0 +1,26 @@
+[
+    {
+        "bookingId": 1,
+        "guestName": "John Doe",
+        "roomNumber": 101,
+        "checkInDate": "2023-10-01",
+        "checkOutDate": "2023-10-05",
+        "status": "Checked In"
+    },
+    {
+        "bookingId": 2,
+        "guestName": "Jane Smith",
+        "roomNumber": 102,
+        "checkInDate": "2023-10-03",
+        "checkOutDate": "2023-10-07",
+        "status": "Checked Out"
+    },
+    {
+        "bookingId": 3,
+        "guestName": "Alice Johnson",
+        "roomNumber": 103,
+        "checkInDate": "2023-10-04",
+        "checkOutDate": "2023-10-10",
+        "status": "Pending"
+    }
+]

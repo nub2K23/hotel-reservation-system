@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check In</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Check In</h1>
+        <form id="checkInForm">
+            <label for="bookingId">Booking ID:</label>
+            <input type="text" id="bookingId" name="bookingId" required>
+
+            <label for="guestName">Guest Name:</label>
+            <input type="text" id="guestName" name="guestName" required>
+
+            <label for="roomNumber">Room Number:</label>
+            <input type="text" id="roomNumber" name="roomNumber" required>
+
+            <button type="submit">Check In</button>
+        </form>
+        <div id="message"></div>
+    </div>
+    <script src="../js/checkin.js"></script>
+</body>
+</html>
