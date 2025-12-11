@@ -1,0 +1,89 @@
+{
+  "rooms": [
+    {
+      "number": 101,
+      "type": "Single",
+      "status": "Available",
+      "rate": 799
+    },
+    {
+      "number": 102,
+      "type": "Double",
+      "status": "Available",
+      "rate": 1599
+    },
+    {
+      "number": 103,
+      "type": "Suite",
+      "status": "Available",
+      "rate": 2800
+    }
+  ],
+  "reservations": [
+    {
+      "guest": "rahul",
+      "room": "101",
+      "dIn": "2025-12-12",
+      "dOut": "2025-12-14",
+      "rate": 799,
+      "payment": {
+        "method": "Cash",
+        "amount": 799,
+        "cardholder": "",
+        "cardMasked": "",
+        "status": "Paid"
+      },
+      "status": "Checked-out",
+      "createdAt": "2025-12-11T18:51:24.014Z"
+    },
+    {
+      "guest": "rahul",
+      "room": "101",
+      "dIn": "2025-12-13",
+      "dOut": "2025-12-14",
+      "rate": 799,
+      "payment": {
+        "method": "Cash",
+        "amount": 100,
+        "cardholder": "",
+        "cardMasked": "",
+        "status": "Paid"
+      },
+      "status": "Checked-out",
+      "createdAt": "2025-12-11T19:12:49.916Z"
+    },
+    {
+      "guest": "rahul",
+      "room": "101",
+      "dIn": "2025-12-12",
+      "dOut": "2025-12-13",
+      "rate": 799,
+      "payment": {
+        "method": "Cash",
+        "amount": 899,
+        "cardholder": "",
+        "cardMasked": "",
+        "status": "Paid"
+      },
+      "status": "Checked-out",
+      "createdAt": "2025-12-11T19:26:39.671Z"
+    },
+    {
+      "guest": "brajesh",
+      "room": "103",
+      "dIn": "2025-12-12",
+      "dOut": "2025-12-13",
+      "rate": 2800,
+      "payment": {
+        "method": "Cash",
+        "amount": 2000,
+        "cardholder": "",
+        "cardMasked": "",
+        "status": "Paid"
+      },
+      "status": "Checked-out",
+      "createdAt": "2025-12-11T19:27:38.601Z"
+    }
+  ],
+  "revenue": 3798
+}

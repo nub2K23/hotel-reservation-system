@@ -1,0 +1,40 @@
+{
+  "rooms": [
+    {
+      "roomNumber": 101,
+      "roomType": "Single",
+      "price": 100,
+      "availability": true
+    },
+    {
+      "roomNumber": 102,
+      "roomType": "Double",
+      "price": 150,
+      "availability": true
+    },
+    {
+      "roomNumber": 103,
+      "roomType": "Suite",
+      "price": 250,
+      "availability": true
+    },
+    {
+      "roomNumber": 104,
+      "roomType": "Single",
+      "price": 100,
+      "availability": false
+    },
+    {
+      "roomNumber": 105,
+      "roomType": "Double",
+      "price": 150,
+      "availability": true
+    },
+    {
+      "roomNumber": 106,
+      "roomType": "Suite",
+      "price": 250,
+      "availability": false
+    }
+  ]
+}

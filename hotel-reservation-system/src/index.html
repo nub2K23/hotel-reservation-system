@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hotel Reservation — Demo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-row">
+      <div class="brand">
+        <div class="logo">HRS</div>
+        <div class="brand-text">Hotel Reservation System</div>
+      </div>
+      <nav class="main-nav">
+        <a href="#" data-route="dashboard" class="nav-link active">Home</a>
+        <a href="#" data-route="reservations" class="nav-link">Reservations</a>
+        <a href="#" data-route="rooms" class="nav-link">Rooms</a>
+        <a href="#" data-route="checkin" class="nav-link">Check-In</a>
+        <a href="#" data-route="checkout" class="nav-link">Check-Out</a>
+        <a href="#" data-route="reports" class="nav-link">Reports</a>
+      </nav>
+      <div class="auth">
+        <button id="btnLogin" class="btn secondary">Login</button>
+        <div id="userMenu" class="user-menu hidden">
+          <span id="userName"></span>
+          <button id="btnLogout" class="btn link">Log out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- autosave prompt moved into Reports section -->
+
+  <main class="container main">
+    <!-- LOGIN PANEL -->
+    <section id="loginScreen" class="card center-screen">
+      <h2>Sign in</h2>
+      <form id="loginForm" class="form">
+        <label>Username<input type="text" id="username" required /></label>
+        <label>Password<input type="password" id="password" required /></label>
+        <div class="form-actions">
+          <button class="btn primary" type="submit">Sign in</button>
+        </div>
+      </form>
+      <small>Demo: enter any username, password = "password" to authenticate.</small>
+    </section>
+
+    <!-- APP SCREENS -->
+    <section id="app" class="hidden">
+      <div id="dashboard" class="screen">
+        <div class="hero">
+          <h1>Welcome to Hotel Reservation</h1>
+          <p>Quick actions and status overview.</p>
+        </div>
+        <div class="cards">
+          <div class="card action" data-route="reservations">Add Reservation</div>
+          <div class="card action" data-route="rooms">Manage Rooms</div>
+          <div class="card action" data-route="checkin">Check-In</div>
+          <div class="card action" data-route="checkout">Check-Out</div>
+          <div class="card action" data-route="reports">Reports</div>
+        </div>
+      </div>
+
+      <div id="reservations" class="screen hidden">
+        <div class="screen-header">
+          <h2>Add Reservation</h2>
+          <button class="btn link back" data-route="dashboard">Back</button>
+        </div>
+        <form id="resForm" class="form grid">
+          <div id="resError" class="form-error hidden"></div>
+          <label>Guest Name<input id="gName" required /></label>
+          <label>Room Number
+            <select id="rNumber" required>
+              <option value="">-- select room --</option>
+            </select>
+          </label>
+          <div id="roomConflicts" class="conflict-tooltip hidden"></div>
+          <label>Check-in<input id="dIn" type="date" required /></label>
+          <label>Check-out<input id="dOut" type="date" required /></label>
+          <label>Rate<input id="rate" type="number" min="0" step="0.01" required /></label>
+
+          <!-- Payment fields -->
+          <label class="full">Payment Method
+            <select id="payMethod">
+              <option value="Card">Card</option>
+              <option value="Cash">Cash</option>
+            </select>
+          </label>
+          <label>Payment Amount<input id="payAmt" type="number" min="0" step="0.01" /></label>
+          <div id="cardFields" class="full">
+            <label class="full">Cardholder Name<input id="cardName" placeholder="Name on card" class="card-field" /></label>
+            <label>Card Number<input id="cardNumber" inputmode="numeric" placeholder="0000 0000 0000 0000" class="card-field" /></label>
+            <label>Expiry<input id="cardExp" placeholder="MM/YY" class="card-field" /></label>
+            <label>CVV<input id="cardCvv" inputmode="numeric" placeholder="123" class="card-field" /></label>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn primary" type="submit">Save Reservation</button>
+          </div>
+        </form>
+        <div class="list card">
+          <h3>Upcoming Reservations</h3>
+          <ul id="resList" class="list-reset"></ul>
+        </div>
+      </div>
+
+      <div id="rooms" class="screen hidden">
+        <div class="screen-header">
+          <h2>Rooms</h2>
+          <button class="btn link back" data-route="dashboard">Back</button>
+        </div>
+        <div class="card">
+          <h3>Rooms Inventory</h3>
+
+          <form id="roomsForm" class="form grid" style="margin-bottom:12px">
+            <div id="roomsError" class="form-error hidden"></div>
+            <label>Room Number<input id="roomNumber" type="number" min="1" required /></label>
+            <label>Type
+              <select id="roomType">
+                <option>Single</option>
+                <option>Double</option>
+                <option>Suite</option>
+              </select>
+            </label>
+            <label>Status
+              <select id="roomStatus">
+                <option>Available</option>
+                <option>Occupied</option>
+                <option>Out of Service</option>
+              </select>
+            </label>
+            <label>Default Rate<input id="roomRate" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+            <div class="form-actions">
+              <button id="roomSave" class="btn primary" type="submit">Add Room</button>
+              <button id="roomCancel" class="btn link" type="button">Cancel</button>
+            </div>
+          </form>
+
+          <table id="roomsTable" class="table">
+            <thead><tr><th>#</th><th>Type</th><th>Rate</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      
+
+      <div id="checkin" class="screen hidden">
+        <div class="screen-header">
+          <h2>Check-In</h2>
+          <button class="btn link back" data-route="dashboard">Back</button>
+        </div>
+        <div class="card">
+          <h3>Pending Arrivals</h3>
+          <ul id="arrivalList" class="list-reset"></ul>
+        </div>
+      </div>
+
+      <div id="checkout" class="screen hidden">
+        <div class="screen-header">
+          <h2>Check-Out</h2>
+          <button class="btn link back" data-route="dashboard">Back</button>
+        </div>
+        <div class="card">
+          <h3>Checked-in Guests</h3>
+          <ul id="stayList" class="list-reset"></ul>
+        </div>
+      </div>
+
+      <div id="reports" class="screen hidden">
+        <div class="screen-header">
+          <h2>Reports</h2>
+          <button class="btn link back" data-route="dashboard">Back</button>
+        </div>
+        <div class="card">
+          <h3>Occupancy & Revenue</h3>
+          <div id="reportContent"></div>
+        </div>
+        <div class="card">
+          <h3>Data Management</h3>
+          <p>Export, import and persist application data.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button id="btnExport" class="btn link">Export Data</button>
+            <button id="btnSaveDisk" class="btn link">Save to Disk</button>
+            <button id="btnAutoSave" class="btn link">Enable Auto-Save</button>
+            <button id="btnLoadDisk" class="btn link">Load from Disk</button>
+            <button id="btnImport" class="btn link">Import Data</button>
+            <input id="importFile" type="file" accept="application/json" style="display:none" />
+          </div>
+        </div>
+        <div id="autosavePrompt" class="autosave-prompt hidden">
+          <div class="container">
+            <span><strong>Enable Auto-Save:</strong> Choose a default file to automatically persist data to disk (recommended).</span>
+            <div class="prompt-actions">
+              <button id="promptEnable" class="btn primary">Enable Auto-Save</button>
+              <button id="promptDismiss" class="btn link">Don't show again</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">© Demo Hotel Reservation</div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
